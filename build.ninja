@@ -1,0 +1,18 @@
+cxxflags = -std=c++14 -fPIC -Wall -Wextra -Werror -I include -fdiagnostics-color=always
+builddir = build
+
+rule compile
+    depfile     = $out.d
+    command     = c++ -MMD -MF $out.d $cxxflags $cppflags -c $in -o $out
+    description = compiling $out
+
+rule shared-lib
+    command     = c++ $cxxflags -shared $in -o $out
+    description = linking $out
+
+
+build $builddir/engine.o:     compile src/engine.cpp
+build $builddir/expression.o: compile src/expression.cpp
+build $builddir/value.o:      compile src/value.cpp
+
+build conflang.so: shared-lib $builddir/engine.o $builddir/expression.o $builddir/value.o

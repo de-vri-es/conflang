@@ -1,13 +1,16 @@
 #pragma once
-#include "forward.hpp"
+#include "types.hpp"
 #include "value.hpp"
 
 #include <utility>
-#include <string>
 #include <vector>
 #include <map>
 
 namespace conflang {
+
+expression * lookup_reference(scope const & scope, string_view identifier);
+expression * lookup_loose_reference(scope const & original_scope, map_expression * local_scope, string_view identifier);
+expression * lookup_unlinked_reference(map_expression * local_scope, string_view identifier);
 
 class expression {
 public:
@@ -28,6 +31,35 @@ public:
 	}
 };
 
+class reference_expression : public expression {
+public:
+	/**
+	 * The different types of references:
+	 *
+	 * normal:
+	 *   A normal reference is bound tightly to a name from it's own (or parent) scope.
+	 *   It will never bind to a name from another scope in inheritance expressions.
+	 *
+	 * loose:
+	 *   Loose references are bound to a name from their own (or parent) scope,
+	 *   but they can be rebound to another scope using inheritance expressions.
+	 *
+	 * unlinked:
+	 *   Unlinked references do not refer to a name in their own (or parent) scope and
+	 *   must always be rebound to a new scope using inheritance expressions.
+	 *   Using unlinked references in anything but abstract maps is not permitted.
+	 */
+	enum class reference_t {
+		normal,
+		loose,
+		unlinked,
+	};
+
+	string_view identifier;
+
+	value::ptr evaluate(engine const & engine, scope const & scope) override;
+};
+
 class list_expression : public expression {
 public:
 	std::vector<expression::ptr> children;
@@ -37,14 +69,7 @@ public:
 
 class map_expression : public expression {
 public:
-	std::map<std::string, expression::ptr> elements;
-
-	value::ptr evaluate(engine const & engine, scope const & scope) override;
-};
-
-class reference_expression : public expression {
-public:
-	std::string identifier;
+	std::map<string_view, expression::ptr> elements;
 
 	value::ptr evaluate(engine const & engine, scope const & scope) override;
 };

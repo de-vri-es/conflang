@@ -1,5 +1,5 @@
 #pragma once
-#include "scope.hpp"
+#include "types.hpp"
 #include "expression.hpp"
 #include "value.hpp"
 

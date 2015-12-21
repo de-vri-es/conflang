@@ -1,7 +1,31 @@
 #include "expression.hpp"
 #include "engine.hpp"
 
+#include <string>
+
 namespace conflang {
+
+expression * lookup_reference(scope const & scope, string_view identifier) {
+	for (auto i = scope.rbegin(); i != scope.rend(); ++i) {
+		map_expression const & current = **i;
+		auto hit = current.elements.find(identifier);
+		if (hit != current.elements.end()) return hit->second.get();
+	}
+
+	return nullptr;
+}
+
+expression * lookup_loose_reference(scope const & original_scope, map_expression * local_scope, string_view identifier) {
+	expression * local = lookup_unlinked_reference(local_scope, identifier);
+	if (local) return local;
+	return lookup_reference(original_scope, identifier);
+}
+
+expression * lookup_unlinked_reference(map_expression * local_scope, string_view identifier) {
+	auto hit = local_scope->elements.find(identifier);
+	if (hit == local_scope->elements.end()) return nullptr;
+	return hit->second.get();
+}
 
 expression::~expression() {}
 
@@ -20,6 +44,12 @@ value::ptr map_expression::evaluate(engine const & engine, scope const & scope) 
 		result->emplace(entry.first, entry.second->evaluate(engine, scope));
 	}
 	return std::move(result);
+}
+
+value::ptr reference_expression::evaluate(engine const & engine, scope const & scope) {
+	expression * expression = lookup_reference(scope, identifier);
+	if (!expression) throw std::runtime_error("undefined reference: " + std::string(identifier));
+	return expression->evaluate(engine, scope);
 }
 
 value::ptr function_call_expression::evaluate(engine const & engine, scope const & scope) {
@@ -42,8 +72,8 @@ value::ptr unary_operator_expression::evaluate(engine const & engine, scope cons
 		if (overload.applicable(operand.get())) matches.push_back(&overload);
 	}
 
-	if (matches.empty())    throw std::runtime_error("No match for unary operator " + std::to_string(int(type)) + " with type " + operand->type());
-	if (matches.size() > 1) throw std::runtime_error("Ambiguous call to unary operator " + std::to_string(int(type)) + " with type " + operand->type());
+	if (matches.empty())    throw std::runtime_error("no match for unary operator "      + std::to_string(int(type)) + " with type " + operand->type());
+	if (matches.size() > 1) throw std::runtime_error("ambiguous call to unary operator " + std::to_string(int(type)) + " with type " + operand->type());
 
 	return matches[0]->call(operand.get());
 }
@@ -57,8 +87,8 @@ value::ptr binary_operator_expression::evaluate(engine const & engine, scope con
 		if (overload.applicable(lhs.get(), rhs.get())) matches.push_back(&overload);
 	}
 
-	if (matches.empty())    throw std::runtime_error("No match for binary operator " + std::to_string(int(type)) + " with types " + lhs->type() + " and " + rhs->type());
-	if (matches.size() > 1) throw std::runtime_error("Ambiguous call to binary operator " + std::to_string(int(type)) + " with types " + lhs->type() + " and " + rhs->type());
+	if (matches.empty())    throw std::runtime_error("no match for binary operator "      + std::to_string(int(type)) + " with types " + lhs->type() + " and " + rhs->type());
+	if (matches.size() > 1) throw std::runtime_error("ambiguous call to binary operator " + std::to_string(int(type)) + " with types " + lhs->type() + " and " + rhs->type());
 
 	return matches[0]->call(lhs.get(), rhs.get());
 }

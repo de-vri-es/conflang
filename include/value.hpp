@@ -1,7 +1,8 @@
 #pragma once
+#include "types.hpp"
+
 #include <map>
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -65,7 +66,7 @@ public:
 	}
 };
 
-class map : public value, public std::map<std::string, value::ptr> {
+class map : public value, public std::map<string_view, value::ptr> {
 public:
 	char const * type() const override { return "map"; }
 

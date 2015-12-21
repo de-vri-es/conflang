@@ -1,9 +1,10 @@
 #pragma once
+#include <vector>
+#include <experimental/string_view>
 
 namespace conflang {
 
-class engine;
-class scope;
+using string_view = std::experimental::string_view;
 
 class value;
 class null_value;
@@ -19,5 +20,8 @@ class reference_expression;
 class function_call_expression;
 class unary_operator_expression;
 class binary_operator_expression;
+
+using scope = std::vector<map_expression *>;
+class engine;
 
 }

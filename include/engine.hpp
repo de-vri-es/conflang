@@ -12,32 +12,38 @@ namespace conflang {
 struct binary_overload {
 	virtual ~binary_overload();
 
-	virtual bool applicable(value * left, value * right) = 0;
+	virtual bool applicable(value * lhs, value * rhs) const = 0;
 
-	virtual value::ptr call(value * left, value * right) = 0;
+	virtual value::ptr call(value * lhs, value * rhs) const = 0;
 };
 
 struct unary_overload {
 	virtual ~unary_overload();
 
-	virtual bool applicable(value *) = 0;
+	virtual bool applicable(value *) const = 0;
 
-	virtual value::ptr call(value *) = 0;
+	virtual value::ptr call(value *) const = 0;
 };
 
 class engine {
 private:
-	using unary_overload  = std::function<value::cptr (value::cptr)>;
-
-	std::array<std::vector<binary_overload>, binary_operator::type_count> binary_overloads_;
-	std::array<std::vector<unary_overload>,  unary_operator::type_count>  unary_overloads_;
+	std::array<std::vector<binary_overload>, binary_operator_expression::type_count> binary_overloads_;
+	std::array<std::vector<unary_overload>,  unary_operator_expression::type_count>  unary_overloads_;
 
 public:
-	std::vector<binary_overload> const & binary_overloads(binary_operator::operator_t type) const {
+	std::vector<unary_overload> const & unary_overloads(unary_operator_expression::operator_t type) const {
+		return unary_overloads_[std::size_t(type)];
+	}
+
+	std::vector<unary_overload> & unary_overloads(unary_operator_expression::operator_t type) {
+		return unary_overloads_[std::size_t(type)];
+	}
+
+	std::vector<binary_overload> const & binary_overloads(binary_operator_expression::operator_t type) const {
 		return binary_overloads_[std::size_t(type)];
 	}
 
-	std::vector<binary_overload> & binary_overloads(binary_operator::operator_t type) {
+	std::vector<binary_overload> & binary_overloads(binary_operator_expression::operator_t type) {
 		return binary_overloads_[std::size_t(type)];
 	}
 };

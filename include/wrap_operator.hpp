@@ -8,12 +8,12 @@ template<typename T1, typename T2>
 struct binary_overload_wrapper : binary_overload {
 	std::function<value::ptr(T1 *, T2 *)> functor;
 
-	bool applicable(value * left, value * right) override {
-		return dynamic_cast<T1 *>(left) != nullptr && dynamic_cast<T2 *>(right) != nullptr;
+	bool applicable(value * lhs, value * rhs) const override {
+		return dynamic_cast<T1 *>(lhs) != nullptr && dynamic_cast<T2 *>(rhs) != nullptr;
 	}
 
-	value::ptr call(value * left, value * right) override {
-		return functor(static_cast<T1 *>(left), static_cast<T2 *>(right));
+	value::ptr call(value * lhs, value * rhs) const override {
+		return functor(static_cast<T1 *>(lhs), static_cast<T2 *>(rhs));
 	}
 };
 
@@ -26,11 +26,11 @@ template<typename T>
 struct unary_overload_wrapper : unary_overload {
 	std::function<value::ptr(T *)> functor;
 
-	bool applicable(value * operand) override {
+	bool applicable(value * operand) const override {
 		return dynamic_cast<T *>(operand) != nullptr;
 	}
 
-	value::ptr call(value * operand) override {
+	value::ptr call(value * operand) const override {
 		return functor(static_cast< T*>(operand));
 	}
 };
